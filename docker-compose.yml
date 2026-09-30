@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: lawllm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lawllm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lawllm_secure_dev_pw}
+      POSTGRES_DB: ${POSTGRES_DB:-lawllm}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lawllm} -d ${POSTGRES_DB:-lawllm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - lawllm-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lawllm-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Connects using Docker internal service name 'postgres' (NOT localhost)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lawllm}:${POSTGRES_PASSWORD:-lawllm_secure_dev_pw}@postgres:5432/${POSTGRES_DB:-lawllm}
+      POSTGRES_USER: ${POSTGRES_USER:-lawllm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lawllm_secure_dev_pw}
+      POSTGRES_DB: ${POSTGRES_DB:-lawllm}
+      POSTGRES_PORT: 5432
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "3000:3000"
+    networks:
+      - lawllm-network
+
+volumes:
+  postgres_data:
+    name: lawllm_postgres_data
+
+networks:
+  lawllm-network:
+    name: lawllm-network
+    driver: bridge

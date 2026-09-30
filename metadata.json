@@ -1,0 +1,6 @@
+{
+  "name": "LexiMind - Legal AI & Contract Analyzer",
+  "description": "Enterprise-grade legal intelligence suite with AI RAG research, case summarizer, interactive citation knowledge graph, chronology builder, and comprehensive Phase 7 Contract Risk & Missing Clause Analyzer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
